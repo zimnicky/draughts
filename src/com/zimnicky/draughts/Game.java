@@ -4,7 +4,7 @@ package com.zimnicky.draughts;
 import java.util.ArrayList;
 
 public class Game implements Runnable{
-    public enum MoveResult{UNKNOWN, MOVED, BEAT, WRONG};
+    public enum MoveResult{UNKNOWN, MOVED, BEAT, WRONG}
     public static class Move{
         private MoveResult result = MoveResult.UNKNOWN;
         public int startCol;
@@ -12,12 +12,17 @@ public class Game implements Runnable{
         public int distCol;
         public int distRow;
 
-        public Move(){}
         public Move(int rowi, int coli, int rowj, int colj) {
             startCol = coli;
             startRow = rowi;
             distCol = colj;
             distRow = rowj;
+        }
+        public Move(Move other){
+            startCol = other.startCol;
+            startRow = other.startRow;
+            distCol = other.distCol;
+            distRow = other.distRow;
         }
 
        public MoveResult getResult() {
@@ -63,6 +68,8 @@ public class Game implements Runnable{
         players[1] = second;
         first.setColor(Player.Color.WHITE);
         first.setColor(Player.Color.BLACK);
+        Thread th = new Thread(this);
+        th.start();
     }
 
 
@@ -78,6 +85,8 @@ public class Game implements Runnable{
                 board.setCell(i,j, Board.Cell.EMPTY);
                 if (cell.isWhite()){
                     board.setCountBlack(board.getCountBlack() - 1);
+                } else {
+                    board.setCountWhite(board.getCountWhite() - 1);
                 }
                 j += d;
             }
@@ -248,11 +257,8 @@ public class Game implements Runnable{
             Move move = null;
             do {
                 move = players[currentPlayer].makeMove(this, lastMove[currentPlayer], move);
-                if (move == null)
-                    System.out.println("p" + currentPlayer + " wrong move");
             }while (!canMove(move, lastMove[currentPlayer]));
 
-            System.out.println("p" + currentPlayer + ": " + move.toString());
             makeMove(move);
 
             lastMove[currentPlayer] = move;
