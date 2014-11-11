@@ -26,7 +26,7 @@ public class Board {
     private int countWhite;
     private int countBlack;
 
-    public void startPosition() {
+    private void startPosition() {
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j ++) {
@@ -62,7 +62,7 @@ public class Board {
         data = new Cell[size][size];
         for (int i = 0; i < size; i++){
             for (int j = 0; j < size; j++){
-                data[i][j] = board.data[i][j];
+                data[i][j] = board.getCell(i,j);
             }
         }
         countBlack = board.countBlack;
@@ -73,27 +73,27 @@ public class Board {
         return size;
     }
 
-    public Cell getCell(int row, int col) {
+    synchronized public Cell getCell(int row, int col) {
         return data[row][col];
     }
 
-    public void setCell(int row, int col, Cell cell) {
+    synchronized public void setCell(int row, int col, Cell cell) {
         data[row][col] = cell;
     }
 
-    public int getCountWhite() {
+    synchronized public int getCountWhite() {
         return countWhite;
     }
 
-    public int getCountBlack() {
+    synchronized public int getCountBlack() {
         return countBlack;
     }
 
-    public void setCountWhite(int countWhite) {
+    synchronized public void setCountWhite(int countWhite) {
         this.countWhite = countWhite;
     }
 
-    public void setCountBlack(int countBlack) {
+    synchronized public void setCountBlack(int countBlack) {
         this.countBlack = countBlack;
     }
 
@@ -109,7 +109,7 @@ public class Board {
 
         for (int t = 0; t < dist; t++, i++, j++) {
             if (i >= 0 && j >= 0 && i < size && j < size
-                    && data[i][j].isBlack()) {
+                    && getCell(i,j).isBlack()) {
                 count++;
             }
         }
@@ -129,7 +129,7 @@ public class Board {
 
         for (int t = 0; t < dist; t++, i++, j++) {
             if (i >= 0 && j >= 0 && i < size && j < size
-                && data[i][j].isWhite()) {
+                && getCell(i,j).isWhite()) {
                 count++;
             }
         }
@@ -144,9 +144,9 @@ public class Board {
             return 0;
         int r = startR;
         int c = startC;
-        Cell et = data[r][c];
+        Cell et = getCell(r, c);
         int count = 0;
-        while (r >= 0 && c >= 0 && r < size && c < size && data[r][c] == et) {
+        while (r >= 0 && c >= 0 && r < size && c < size && getCell(r, c) == et) {
             r += dr;
             c += dc;
             count++;
