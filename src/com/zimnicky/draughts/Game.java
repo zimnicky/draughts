@@ -12,6 +12,7 @@ public class Game implements Runnable{
         public int distCol;
         public int distRow;
 
+        public Move(){}
         public Move(int rowi, int coli, int rowj, int colj) {
             startCol = coli;
             startRow = rowi;
@@ -180,8 +181,8 @@ public class Game implements Runnable{
                 }
             }
 
-            if (!isBeat && (start.isBlack() && dr > 0)
-                    || (start.isWhite() && dr < 0)){
+            if (!isBeat && (start.isBlack() && dr < 0)
+                    || (start.isWhite() && dr > 0)){
                 move.result = MoveResult.WRONG;
                 return false;
             }

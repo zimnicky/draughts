@@ -32,9 +32,9 @@ public class Board {
             for (int j = 0; j < size; j ++) {
                 if (((i*(size-1) + j) & 1) == 1) {
                     if (i < size/2 - 1) {
-                        data[i][j] = Cell.WHITE;
-                    } else if (i > size/2) {
                         data[i][j] = Cell.BLACK;
+                    } else if (i > size/2) {
+                        data[i][j] = Cell.WHITE;
                     } else {
                         data[i][j] = Cell.EMPTY;
                     }
@@ -74,11 +74,16 @@ public class Board {
     }
 
     synchronized public Cell getCell(int row, int col) {
+        if (row < 0 || col < 0 || row >= size || col >= size){
+            return Cell.INVALID;
+        }
         return data[row][col];
     }
 
     synchronized public void setCell(int row, int col, Cell cell) {
-        data[row][col] = cell;
+        if (row >= 0 || col >= 0 || row < size || col < size){
+            data[row][col] = cell;
+        }
     }
 
     synchronized public int getCountWhite() {
