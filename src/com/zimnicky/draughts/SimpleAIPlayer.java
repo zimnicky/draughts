@@ -5,13 +5,13 @@ import java.util.Random;
 
 public class SimpleAIPlayer extends Player {
 
-    public Game.Move makeMove(Game game, Game.Move lastCorrectMove, Game.Move lastMove)
+    public Game.Move makeMove(Game game, Game.Move lastMove, boolean beatSequence)
     {
         Game.Move move = null;
         Board board = game.getBoard();
-        if (lastCorrectMove != null && lastCorrectMove.getResult() == Game.MoveResult.BEAT
-                && game.canBeat(lastCorrectMove.distRow, lastCorrectMove.distCol)) {
-            ArrayList<Game.Move> moves = game.getAvailableMoves(lastCorrectMove.distRow, lastCorrectMove.distCol);
+        if (lastMove != null && beatSequence
+                && game.canBeat(lastMove.distRow, lastMove.distCol)) {
+            ArrayList<Game.Move> moves = game.getAvailableMoves(lastMove.distRow, lastMove.distCol);
             Random rand = new Random();
             move = moves.get(rand.nextInt(moves.size()));
             return move;

@@ -6,6 +6,9 @@ public class Board {
     public enum Cell {
         EMPTY, INVALID, BLACK, WHITE, BLACK_QUEEN, WHITE_QUEEN;
 
+        boolean sameColor(Cell other) {
+            return (isWhite() && other.isWhite()) || (isBlack() && other.isBlack());
+        }
         boolean isQueen() {
             return this == BLACK_QUEEN || this == WHITE_QUEEN;
         }
@@ -81,7 +84,7 @@ public class Board {
     }
 
     synchronized public void setCell(int row, int col, Cell cell) {
-        if (row >= 0 || col >= 0 || row < size || col < size){
+        if (row >= 0 && col >= 0 && row < size && col < size){
             data[row][col] = cell;
         }
     }
@@ -102,19 +105,19 @@ public class Board {
         this.countBlack = countBlack;
     }
 
-    public int segmentCountBlack(int startR, int startC, int dist) {
-        int count = 0;
-        int i = startR;
-        int j = startC;
-        if (dist < 0) {
-            i += dist;
-            j += dist;
-            dist = -dist;
+    public int segmentCount(int startR, int startC, int distR, int distC, Cell color) {
+        if (startR == distR || startC == distC){
+            return 0;
         }
+        int count = 0;
+        int dr = distR - startR;
+        int dc = distC - startC;
+        dr /= Math.abs(dr);
+        dc /= Math.abs(dc);
 
-        for (int t = 0; t < dist; t++, i++, j++) {
+        for (int i = startR, j = startC; i != distR && j != distC; i += dr, j += dc) {
             if (i >= 0 && j >= 0 && i < size && j < size
-                    && getCell(i,j).isBlack()) {
+                    && getCell(i,j).sameColor(color)) {
                 count++;
             }
         }
@@ -122,24 +125,13 @@ public class Board {
         return count;
     }
 
-    public int segmentCountWhite(int startR, int startC, int dist) {
-        int count = 0;
-        int i = startR;
-        int j = startC;
-        if (dist < 0) {
-            i += dist;
-            j += dist;
-            dist = -dist;
-        }
 
-        for (int t = 0; t < dist; t++, i++, j++) {
-            if (i >= 0 && j >= 0 && i < size && j < size
-                && getCell(i,j).isWhite()) {
-                count++;
-            }
-        }
+    public int segmentCountBlack(int startR, int startC,int lenR, int lenC) {
+        return segmentCount(startR, startC, lenR, lenC, Cell.BLACK);
+    }
 
-        return count;
+    public int segmentCountWhite(int startR, int startC,int lenR, int lenC) {
+        return segmentCount(startR, startC, lenR, lenC, Cell.WHITE);
     }
 
     public int sequenceLength(int startR, int startC, int dr, int dc) {
