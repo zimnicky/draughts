@@ -13,7 +13,7 @@ import java.util.TimerTask;
 
 public class Main extends Activity {
 
-    private TextView currentPlayerText;
+    private TextView gameStatusText;
 
     private Game game;
     private HumanPlayer player;
@@ -21,8 +21,6 @@ public class Main extends Activity {
     private Game.Move opponentsLastMove;
     private ArrayList<Game.Move> availableMoves;
     private boolean doingMove;
-
-    private Timer timer;
 
     BoardCellView[][] cellViews;
 
@@ -119,20 +117,20 @@ public class Main extends Activity {
         }
 
         switch (game.getWinner()){
-            case 0: currentPlayerText.setText("You win!");
+            case 0: gameStatusText.setText("You win!");
                 break;
-            case 1: currentPlayerText.setText("You lose!");
+            case 1: gameStatusText.setText("You lose!");
                 break;
             default:
                 if (!player.isWaitMove()){
                     doingMove = false;
-                    currentPlayerText.setText("Opponent's move!");
+                    gameStatusText.setText("Opponent's move!");
                 }
                 else{
                     currentMove.setStartRow(-1);
                     currentMove.setStartCol(-1);
                     doingMove = true;
-                    currentPlayerText.setText("Your move!");
+                    gameStatusText.setText("Your move!");
                     opponentsLastMove = game.getLastMove(1);
                     if (opponentsLastMove != null) {
                         cellViews[opponentsLastMove.getStartRow()][opponentsLastMove.getStartCol()].setOpponentsPath(true);
@@ -190,10 +188,10 @@ public class Main extends Activity {
         currentMove = new Game.Move();
         game = new Game(player, player2);
 
-        currentPlayerText = (TextView) findViewById(R.id.currentPlayerText);
+        gameStatusText = (TextView) findViewById(R.id.gameStatusText);
 
 
-        timer = new Timer();
+        Timer timer = new Timer();
 
         timer.schedule(new TimerTask() {
             public void run() {
