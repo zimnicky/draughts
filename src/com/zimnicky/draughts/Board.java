@@ -32,92 +32,104 @@ public class Board {
 
     private final static int defaultSize = 8;
 
-    private int size;
-    private Cell[][] data;
-    private int countWhite;
-    private int countBlack;
+    private int blackCells; // 0 -- empty or white piece, 1 -- black piece
+    private int whiteCells; // 0 -- empty or black piece, 1 -- whitePiece
+    private int queens;     // 0 -- empty or not queen, 1 -- queen
 
     private void startPosition() {
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (((i*(size-1) + j) & 1) == 1) {
-                    if (i < size/2 - 1) {
-                        data[i][j] = Cell.BLACK;
-                    } else if (i > size/2) {
-                        data[i][j] = Cell.WHITE;
-                    } else {
-                        data[i][j] = Cell.EMPTY;
-                    }
-                } else {
-                    data[i][j] = Cell.INVALID;
-                }
-            }
-        }
+        whiteCells = 0b11111111111100000000000000000000;
+        blackCells = 0b00000000000000000000111111111111;
+        queens     = 0;
 
-        countWhite = countBlack = (size-1)*(size-1)/4;
+       // whiteCells = 0b00000000010000000000000000000000;
+       // blackCells = 0b00000000000000001000000000000000;
+       // queens     = 0b00000000000000001000000000000000;
+
+//        for (int i = 0; i < 8; i++){
+//            for (int j = 0; j < 8; j++){
+//                System.out.print(getCell(i, j) + "  ");
+//            }
+//            System.out.println();
+//        }
+
+
+    }
+
+    private int getCellMask(int row, int col){
+        return 1 << (row*(defaultSize >> 1) + (col >> 1));
     }
 
     public Board() {
-        this(defaultSize);
-    }
-
-    public Board(int size) {
-        this.size = size;
-        data = new Cell[size][size];
         startPosition();
     }
 
     public Board(Board board) {
-        this.size = board.size;
-        data = new Cell[size][size];
-        for (int i = 0; i < size; i++){
-            for (int j = 0; j < size; j++){
-                data[i][j] = board.getCell(i,j);
-            }
-        }
-        countBlack = board.countBlack;
-        countWhite = board.countWhite;
+        blackCells = board.blackCells;
+        whiteCells = board.whiteCells;
+        queens = board.queens;
     }
 
     public boolean isCorrectCell(int row, int col){
-        if (row < 0 || col < 0 || row >= size || col >= size){
+        if (row < 0 || col < 0 || row >= defaultSize || col >= defaultSize
+                || ((row*(defaultSize-1) + col) & 1) == 0){
             return false;
         }
         return true;
     }
 
     public int getSize() {
-        return size;
+        return defaultSize;
     }
+
 
     synchronized public Cell getCell(int row, int col) {
         if (!isCorrectCell(row,col)){
             return Cell.INVALID;
         }
-        return data[row][col];
+        int mask = getCellMask(row, col);
+        if ((blackCells & mask) != 0){
+            if ((queens & mask) != 0){
+                return Cell.BLACK_QUEEN;
+            }
+            return Cell.BLACK;
+        } else if ((whiteCells & mask) != 0){
+            if ((queens & mask) != 0){
+                return Cell.WHITE_QUEEN;
+            }
+            return Cell.WHITE;
+        }
+        return Cell.EMPTY;
     }
 
     synchronized public void setCell(int row, int col, Cell cell) {
         if (isCorrectCell(row,col)){
-            data[row][col] = cell;
+            int mask = getCellMask(row, col);
+            if (cell.isWhite()){
+                whiteCells |= mask;
+                blackCells &= ~mask;
+            } else if (cell.isBlack()){
+                blackCells |= mask;
+                whiteCells &= ~mask;
+            } else {
+                blackCells &= ~mask;
+                whiteCells &= ~mask;
+            }
+
+            if (cell.isQueen()){
+                queens |= mask;
+            } else {
+                queens &= ~mask;
+            }
         }
     }
 
     synchronized public int getCountWhite() {
-        return countWhite;
+        return Integer.bitCount(whiteCells);
     }
 
     synchronized public int getCountBlack() {
-        return countBlack;
-    }
-
-    synchronized public void setCountWhite(int countWhite) {
-        this.countWhite = countWhite;
-    }
-
-    synchronized public void setCountBlack(int countBlack) {
-        this.countBlack = countBlack;
+        return Integer.bitCount(blackCells);
     }
 
     public int segmentCount(int startR, int startC, int distR, int distC, Cell color) {
@@ -147,7 +159,7 @@ public class Board {
     }
 
     public int segmentCountOppositeColor(int startR, int startC, int distR, int distC, Cell color){
-        if (color == Cell.BLACK){
+        if (color.isBlack()){
             return segmentCount(startR, startC, distR, distC, Cell.WHITE);
         }
         return segmentCount(startR, startC, distR, distC, Cell.BLACK);

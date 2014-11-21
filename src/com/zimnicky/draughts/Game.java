@@ -7,25 +7,18 @@ public class Game implements Runnable{
     public enum MoveResult{UNKNOWN, MOVED, BEAT, WRONG}
     public static class Move{
         private MoveResult result = MoveResult.UNKNOWN;
-        private int startCol;
-        private int startRow;
-        private int distCol;
-        private int distRow;
+        private byte startCol;
+        private byte startRow;
+        private byte distCol;
+        private byte distRow;
 
         public Move(){}
 
-        public Move(int move){
-            distCol = (move & 0xFF);
-            distRow = (move >> 8) & 0xFF;
-            startCol = (move >> 16) & 0xFF;
-            startRow = (move >> 24) & 0xFF;
-        }
-
         public Move(int rowi, int coli, int rowj, int colj) {
-            startCol = coli;
-            startRow = rowi;
-            distCol = colj;
-            distRow = rowj;
+            startCol = (byte)coli;
+            startRow = (byte)rowi;
+            distCol = (byte)colj;
+            distRow = (byte)rowj;
         }
         public Move(Move other){
             startCol = other.startCol;
@@ -39,7 +32,7 @@ public class Game implements Runnable{
         }
 
         public void setStartCol(int startCol) {
-            this.startCol = startCol;
+            this.startCol = (byte)startCol;
         }
 
         public int getStartRow() {
@@ -47,7 +40,7 @@ public class Game implements Runnable{
         }
 
         public void setStartRow(int startRow) {
-            this.startRow = startRow;
+            this.startRow = (byte)startRow;
         }
 
         public int getDistCol() {
@@ -55,7 +48,7 @@ public class Game implements Runnable{
         }
 
         public void setDistCol(int distCol) {
-            this.distCol = distCol;
+            this.distCol = (byte)distCol;
         }
 
         public int getDistRow() {
@@ -63,7 +56,18 @@ public class Game implements Runnable{
         }
 
         public void setDistRow(int distRow) {
-            this.distRow = distRow;
+            this.distRow = (byte)distRow;
+        }
+
+        public void set(Move other){
+            if (other == null){
+                return;
+            }
+            startRow = other.startRow;
+            startCol = other.startCol;
+            distRow = other.distRow;
+            distCol = other.distCol;
+            result = other.result;
         }
 
         public MoveResult getResult() {
@@ -73,9 +77,6 @@ public class Game implements Runnable{
            return "(" + startRow + ", " + startCol + ") - (" + distRow + ", " + distCol + ")";
        }
 
-        public int toInt(){
-            return (((((startRow & 0xFF) << 8) + (startCol & 0xFF) << 8) + (distRow & 0xFF)) << 8) + (distCol & 0xFF);
-        }
     }
 
     private final int[][] directions = {{1,1},{1, -1}, {-1, -1}, {-1, 1}};
@@ -124,27 +125,22 @@ public class Game implements Runnable{
     }
 
     public void makeMove(Board board, Move move){
-        Board.Cell cell = board.getCell(move.startRow, move.startCol);
+        Board.Cell cell = board.getCell(move.getStartRow(), move.getStartCol());
 
-        if (cell == Board.Cell.BLACK && move.distRow == board.getSize() - 1){
-            board.setCell(move.distRow, move.distCol, Board.Cell.BLACK_QUEEN);
-        } else if (cell == Board.Cell.WHITE && move.distRow == 0){
-            board.setCell(move.distRow, move.distCol, Board.Cell.WHITE_QUEEN);
+        if (cell == Board.Cell.BLACK && move.getDistRow() == board.getSize() - 1){
+            board.setCell(move.getDistRow(), move.getDistCol(), Board.Cell.BLACK_QUEEN);
+        } else if (cell == Board.Cell.WHITE && move.getDistRow() == 0){
+            board.setCell(move.getDistRow(), move.getDistCol(), Board.Cell.WHITE_QUEEN);
         } else{
-            board.setCell(move.distRow, move.distCol, cell);
+            board.setCell(move.getDistRow(), move.getDistCol(), cell);
         }
-        board.setCell(move.startRow, move.startCol, Board.Cell.EMPTY);
+        board.setCell(move.getStartRow(), move.getStartCol(), Board.Cell.EMPTY);
 
         if (move.getResult() == MoveResult.BEAT) {
-            int dr = ((move.distRow - move.startRow) / Math.abs(move.distRow - move.startRow));
-            int dc = ((move.distCol - move.startCol) / Math.abs(move.distCol - move.startCol));
-            int j = (move.startCol + dc);
-            for (int i = (move.startRow + dr); i != move.distRow; i += dr, j += dc){
-                if (cell.isWhite() && board.getCell(i,j).isBlack()){
-                    board.setCountBlack(board.getCountBlack() - 1);
-                } else if (cell.isBlack() && board.getCell(i,j).isWhite()){
-                    board.setCountWhite(board.getCountWhite() - 1);
-                }
+            int dr = ((move.getDistRow() - move.getStartRow()) / Math.abs(move.getDistRow() - move.getStartRow()));
+            int dc = ((move.getDistCol() - move.getStartCol()) / Math.abs(move.getDistCol() - move.getStartCol()));
+            int j = (move.getStartCol() + dc);
+            for (int i = (move.getStartRow() + dr); i != move.getDistRow(); i += dr, j += dc){
                 board.setCell(i,j, Board.Cell.EMPTY);
             }
         }
@@ -187,7 +183,7 @@ public class Game implements Runnable{
     public boolean canBeat(Player.Color playerColor, Board board) {                      // returns true if 1 or more beats are available for player
         for (int row = 0; row < board.getSize(); row++){
             for (int col = 0; col < board.getSize(); col++) {
-                if (board.getCell(row,col).sameColor(playerColor) && canBeat(row, col)){
+                if (board.getCell(row,col).sameColor(playerColor) && canBeat(row, col, board)){
                     return true;
                 }
             }
@@ -205,28 +201,28 @@ public class Game implements Runnable{
             return false;
         }
 
-        int dr = (move.distRow - move.startRow);
-        int dc = (move.distCol - move.startCol);
+        int dr = (move.getDistRow() - move.getStartRow());
+        int dc = (move.getDistCol() - move.getStartCol());
         int da = Math.abs(dr); // distance between cells
 
         // MUST: abs(dr) = abs(dc),  both cells on board
-        if (da != Math.abs(dc) || !board.isCorrectCell(move.startRow, move.startCol)
-                || !board.isCorrectCell(move.distRow, move.distCol)) {
+        if (da != Math.abs(dc) || !board.isCorrectCell(move.getStartRow(), move.getStartCol())
+                || !board.isCorrectCell(move.getDistRow(), move.getDistCol())) {
             move.result = MoveResult.WRONG;
             return false;
         }
 
         //  start cell mustn't be empty & dist cell must be one
-        Board.Cell dist = board.getCell(move.distRow, move.distCol);
-        Board.Cell start = board.getCell(move.startRow, move.startCol);
+        Board.Cell dist = board.getCell(move.getDistRow(), move.getDistCol());
+        Board.Cell start = board.getCell(move.getStartRow(), move.getStartCol());
         if (start.isEmpty() || start == Board.Cell.INVALID || !dist.isEmpty()) {
             move.result = MoveResult.WRONG;
             return false;
         }
 
         // MUST: only 1 opposite color cell on the path
-        int c = board.segmentCountOppositeColor(move.startRow, move.startCol, (move.startRow + dr), (move.startCol + dc), start);
-        if (c > 1 || board.segmentCount(move.startRow, move.startCol, (move.startRow + dr), (move.startCol + dc), start) > 1){
+        int c = board.segmentCountOppositeColor(move.getStartRow(), move.getStartCol(), (move.getStartRow() + dr), (move.getStartCol() + dc), start);
+        if (c > 1 || board.segmentCount(move.getStartRow(), move.getStartCol(), (move.getStartRow() + dr), (move.getStartCol() + dc), start) > 1){
             move.result = MoveResult.WRONG;
             return false;
         }
@@ -250,14 +246,14 @@ public class Game implements Runnable{
 
         // MUST: use last piece if it beat & can beat more
         if (lastMove != null && lastMove.result == MoveResult.BEAT
-                && (move.startCol != lastMove.distCol || move.startRow != lastMove.distRow
-                || !isBeat)){
+                && canBeat(lastMove.getDistRow(), lastMove.getDistCol(), board)
+                && (move.getStartCol() != lastMove.getDistCol() || move.getStartRow() != lastMove.getDistRow() || !isBeat)){
             move.result = MoveResult.WRONG;
             return false;
         }
 
         // MUST: beat if can
-        if (!isBeat && canBeat(move.startRow, move.startCol)){
+        if (!isBeat && canBeat(move.getStartRow(), move.getStartCol(), board)){
             move.result = MoveResult.WRONG;
             return false;
         }
@@ -279,15 +275,16 @@ public class Game implements Runnable{
     // returns null if there are no moves from this cell
     public ArrayList<Move> getAvailableMoves(int row, int col, Board board, Player.Color playerColor, Move lastMove){
         if (board.getCell(row, col) == Board.Cell.INVALID
-                || (lastMove != null && lastMove.getResult() == MoveResult.BEAT
-                    && (row != lastMove.distRow || col != lastMove.distCol))){
+                || (lastMove != null && lastMove.result == MoveResult.BEAT
+                    && (row != lastMove.getDistRow() || col != lastMove.getDistCol())
+                    && canBeat(lastMove.getDistRow(), lastMove.getDistCol(), board))){
             return null;
         }
         boolean beat = canBeat(playerColor, board);
         if (beat && !canBeat(row, col, board)){
             return null;
         }
-        ArrayList<Move> moves = new ArrayList<Move>();
+        ArrayList<Move> moves = new ArrayList<>();
         for (int[] d: directions) {
             int l = 7;
             if (!board.getCell(row,col).isQueen()){
@@ -322,7 +319,7 @@ public class Game implements Runnable{
                     ArrayList<Move> movesRC = getAvailableMoves(row, col, board, playerColor, lastMove);
                     if (movesRC != null) {
                         if (moves == null){
-                            moves = new ArrayList<Move>();
+                            moves = new ArrayList<>();
                         }
                         moves.addAll(movesRC);
                     }
@@ -332,10 +329,10 @@ public class Game implements Runnable{
         return moves;
     }
 
-    public boolean canMove(Board board, Player.Color playerColor) {
+    public boolean canMove(Board board, Player.Color playerColor, Move lastMove) {
         for (int row = 0; row < board.getSize(); row++){
             for (int col = 0; col < board.getSize(); col++) {
-                if ((board.getCell(row, col).sameColor(playerColor)) && (getAvailableMoves(row, col) != null)){
+                if ((board.getCell(row, col).sameColor(playerColor)) && (getAvailableMoves(row, col, board, playerColor, lastMove) != null)){
                         return true;
                 }
             }
@@ -344,7 +341,10 @@ public class Game implements Runnable{
     }
 
     public boolean canMove() { // returns true if 1 or more moves are available for current player
-        return canMove(board, players[currentPlayer].getColor());
+        if (beatSequence){
+            return canMove(board, players[currentPlayer].getColor(), getLastMove(currentPlayer));
+        }
+        return canMove(board, players[currentPlayer].getColor(), null);
     }
 
 
@@ -356,35 +356,36 @@ public class Game implements Runnable{
         players[1].setColor(Player.Color.BLACK);
         board = new Board();
         winner = -1;
-        beatSequence = false;
 
         lastMove = new Move[2];
+        beatSequence = false;
 
-        while (board.getCountBlack() > 0 && board.getCountWhite() > 0 && canMove()) {
+        while (board.getCountBlack() > 0 && board.getCountWhite() > 0 && winner == -1 && canMove()) {
             Move move;
-            boolean correct = false;
+            boolean correct;
             do {
                 if (beatSequence) {
                     move = players[currentPlayer].makeMove(this, lastMove[currentPlayer]);
-                }
-                else {
-                    move = players[currentPlayer].makeMove(this, null);
-                }
-                if (beatSequence) {
                     correct = canMove(move, lastMove[currentPlayer]);
                 } else {
+                    move = players[currentPlayer].makeMove(this, null);
                     correct = canMove(move, null);
                 }
-            }while (!correct);
+            }while (!correct && move != null);
 
-            makeMove(move);
+            if (move != null) {
+                makeMove(move);
 
-            lastMove[currentPlayer] = move;
-            if (move.getResult() != MoveResult.BEAT || !canBeat(move.distRow, move.distCol)) {
-                currentPlayer ^= 1;
-                beatSequence = false;
-            } else {
-                beatSequence = true;
+                lastMove[currentPlayer] = move;
+                if (move.getResult() != MoveResult.BEAT || !canBeat(move.getDistRow(), move.getDistCol())) {
+                    currentPlayer ^= 1;
+                    beatSequence = false;
+                } else {
+                    beatSequence = true;
+                }
+            }
+            else {
+                winner = currentPlayer ^ 1;
             }
         }
 
@@ -392,7 +393,7 @@ public class Game implements Runnable{
             winner = 0;
         } else if (board.getCountWhite() == 0){
             winner = 1;
-        } else {
+        } else if (winner == -1){
             winner = currentPlayer ^ 1;
         }
     }

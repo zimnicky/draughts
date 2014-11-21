@@ -183,7 +183,7 @@ public class Main extends Activity {
         createBoard();
 
         player = new HumanPlayer();
-        Player player2 = new SimpleNegamaxAIPlayer();
+        Player player2 = new ABAIPlayer((byte)5);
 
         currentMove = new Game.Move();
         game = new Game(player, player2);
