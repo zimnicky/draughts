@@ -185,7 +185,7 @@ public class Main extends Activity {
         createBoard();
 
         player = new HumanPlayer();
-        SimpleAIPlayer player2 = new SimpleAIPlayer();
+        Player player2 = new SimpleNegamaxAIPlayer();
 
         currentMove = new Game.Move();
         game = new Game(player, player2);
@@ -206,20 +206,6 @@ public class Main extends Activity {
             }
 
         }, 0, 100);
-
-       /* ListView list = (ListView) findViewById(R.id.listView);
-
-        ArrayList<String> s = new ArrayList<String>(Arrays.asList("WHITE: e1 - d2","BLACK: a8 - b7"));
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1,s);
-
-        s.add("WHITE: d2 - e3");
-        s.add("BLACK: bc6");
-
-
-
-
-        list.setAdapter(adapter);*/
 
     }
 }
