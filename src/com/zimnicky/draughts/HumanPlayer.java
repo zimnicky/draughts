@@ -25,16 +25,11 @@ public class HumanPlayer extends Player {
         waitingMoveStatus = false;
     }
 
-    public Game.Move makeMove(Game game, Game.Move lastMove, boolean beatSequence)
+    public Game.Move makeMove(Game game, Game.Move lastMove)
     {
         this.game = game;
         move = null;
-        if (beatSequence) {
-            previousMove = lastMove;
-        }
-        else {
-            previousMove = null;
-        }
+        previousMove = lastMove;
         while (!game.canMove(move, previousMove)) {
             waitMove();
         }

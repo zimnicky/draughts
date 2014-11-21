@@ -12,5 +12,5 @@ public abstract class Player {
         this.color = color;
     }
 
-    abstract public Game.Move makeMove(Game game, Game.Move lastMove, boolean beatSequence);
+    abstract public Game.Move makeMove(Game game, Game.Move lastMove);
 }

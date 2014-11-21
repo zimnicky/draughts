@@ -34,7 +34,7 @@ public class Main extends Activity {
                 if (cell != Board.Cell.INVALID) {
                     cellViews[i][j].setCell(cell);
                     if (cellViews[i][j].getCell().isWhite()) {
-                        if (currentMove.startRow == -1) {
+                        if (currentMove.getStartRow() == -1) {
                                 ArrayList<Game.Move> moves = game.getAvailableMoves(i, j);
                             if (moves != null) {
                                 cellViews[i][j].setCanSelect(true);
@@ -50,29 +50,29 @@ public class Main extends Activity {
     }
 
     private ArrayList<Game.Move> getMoveStartAvailableMoves(){
-        if (availableMoves == null && currentMove.startRow >= 0){
-            availableMoves = game.getAvailableMoves(currentMove.startRow, currentMove.startCol);
+        if (availableMoves == null && currentMove.getStartRow() >= 0){
+            availableMoves = game.getAvailableMoves(currentMove.getStartRow(), currentMove.getStartCol());
         }
-        if (currentMove.startRow < 0){
+        if (currentMove.getStartRow() < 0){
             return null;
         }
         return availableMoves;
     }
 
     private void unselectMoveStartCell(){
-        if (currentMove.startRow < 0) {
+        if (currentMove.getStartRow() < 0) {
             return;
         }
-        cellViews[currentMove.startRow][currentMove.startCol].setHighlighted(false);
+        cellViews[currentMove.getStartRow()][currentMove.getStartCol()].setHighlighted(false);
         ArrayList<Game.Move> moves = getMoveStartAvailableMoves();
         if (moves != null) {
             for (Game.Move move : moves) {
-                cellViews[move.distRow][move.distCol].setCanSelect(false);
+                cellViews[move.getDistRow()][move.getDistCol()].setCanSelect(false);
             }
         }
     }
 
-    private void cellOnClick(BoardCellView view){
+    private void cellOnClick(BoardCellView view) {
 
         if (!doingMove) {
             return;
@@ -80,34 +80,33 @@ public class Main extends Activity {
 
         if (view.isHighlighted()) {
             unselectMoveStartCell();
-            currentMove.startRow = -1;
-            currentMove.startCol = -1;
+            currentMove.setStartRow(-1);
+            currentMove.setStartCol(-1);
             return;
         }
 
-        if (currentMove.startRow < 0 || view.getCell().isWhite()) {
+        if (currentMove.getStartRow() < 0 || view.getCell().isWhite()) {
             ArrayList<Game.Move> moves = game.getAvailableMoves(view.getRow(), view.getCol());
             if (moves != null) {
                 unselectMoveStartCell();
-                for (Game.Move move: moves){
-                    cellViews[move.distRow][move.distCol].setCanSelect(true);
+                for (Game.Move move : moves) {
+                    cellViews[move.getDistRow()][move.getDistCol()].setCanSelect(true);
                 }
-                currentMove.startRow = view.getRow();
-                currentMove.startCol = view.getCol();
+                currentMove.setStartRow(view.getRow());
+                currentMove.setStartCol(view.getCol());
                 view.setHighlighted(true);
                 availableMoves = moves;
             }
-        }
-        else {
-            currentMove.distRow = view.getRow();
-            currentMove.distCol = view.getCol();
-            if (player.canMove(currentMove)){
+        } else {
+            currentMove.setDistRow(view.getRow());
+            currentMove.setDistCol(view.getCol());
+            if (player.canMove(currentMove)) {
                 unselectMoveStartCell();
                 doingMove = false;
                 availableMoves = null;
                 if (opponentsLastMove != null) {
-                    cellViews[opponentsLastMove.startRow][opponentsLastMove.startCol].setOpponentsPath(false);
-                    cellViews[opponentsLastMove.distRow][opponentsLastMove.distCol].setOpponentsPath(false);
+                    cellViews[opponentsLastMove.getStartRow()][opponentsLastMove.getStartCol()].setOpponentsPath(false);
+                    cellViews[opponentsLastMove.getDistRow()][opponentsLastMove.getDistCol()].setOpponentsPath(false);
                 }
                 player.setMove(currentMove);
             }
@@ -130,14 +129,14 @@ public class Main extends Activity {
                     currentPlayerText.setText("Opponent's move!");
                 }
                 else{
-                    currentMove.startRow = -1;
-                    currentMove.startCol = -1;
+                    currentMove.setStartRow(-1);
+                    currentMove.setStartCol(-1);
                     doingMove = true;
                     currentPlayerText.setText("Your move!");
                     opponentsLastMove = game.getLastMove(1);
                     if (opponentsLastMove != null) {
-                        cellViews[opponentsLastMove.startRow][opponentsLastMove.startCol].setOpponentsPath(true);
-                        cellViews[opponentsLastMove.distRow][opponentsLastMove.distCol].setOpponentsPath(true);
+                        cellViews[opponentsLastMove.getStartRow()][opponentsLastMove.getStartCol()].setOpponentsPath(true);
+                        cellViews[opponentsLastMove.getDistRow()][opponentsLastMove.getDistCol()].setOpponentsPath(true);
                     }
                 }
         }

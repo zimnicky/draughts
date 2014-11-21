@@ -1,6 +1,5 @@
 package com.zimnicky.draughts;
 
-
 public class Board {
 
     public enum Cell {
@@ -9,6 +8,11 @@ public class Board {
         boolean sameColor(Cell other) {
             return (isWhite() && other.isWhite()) || (isBlack() && other.isBlack());
         }
+
+        boolean sameColor(Player.Color color){
+            return (isWhite() && color == Player.Color.WHITE) || (isBlack() && color == Player.Color.BLACK);
+        }
+
         boolean isQueen() {
             return this == BLACK_QUEEN || this == WHITE_QUEEN;
         }
@@ -19,6 +23,10 @@ public class Board {
 
         boolean isWhite() {
             return this == WHITE || this == WHITE_QUEEN;
+        }
+
+        boolean isEmpty() {
+            return this == EMPTY;
         }
     }
 
@@ -32,7 +40,7 @@ public class Board {
     private void startPosition() {
 
         for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j ++) {
+            for (int j = 0; j < size; j++) {
                 if (((i*(size-1) + j) & 1) == 1) {
                     if (i < size/2 - 1) {
                         data[i][j] = Cell.BLACK;
@@ -72,19 +80,26 @@ public class Board {
         countWhite = board.countWhite;
     }
 
+    public boolean isCorrectCell(int row, int col){
+        if (row < 0 || col < 0 || row >= size || col >= size){
+            return false;
+        }
+        return true;
+    }
+
     public int getSize() {
         return size;
     }
 
     synchronized public Cell getCell(int row, int col) {
-        if (row < 0 || col < 0 || row >= size || col >= size){
+        if (!isCorrectCell(row,col)){
             return Cell.INVALID;
         }
         return data[row][col];
     }
 
     synchronized public void setCell(int row, int col, Cell cell) {
-        if (row >= 0 && col >= 0 && row < size && col < size){
+        if (isCorrectCell(row,col)){
             data[row][col] = cell;
         }
     }
@@ -116,8 +131,7 @@ public class Board {
         dc /= Math.abs(dc);
 
         for (int i = startR, j = startC; i != distR && j != distC; i += dr, j += dc) {
-            if (i >= 0 && j >= 0 && i < size && j < size
-                    && getCell(i,j).sameColor(color)) {
+            if (getCell(i, j).sameColor(color)) {
                 count++;
             }
         }
@@ -125,6 +139,26 @@ public class Board {
         return count;
     }
 
+    public int segmentCount(int startR, int startC, int distR, int distC, Player.Color color){
+        if (color == Player.Color.BLACK){
+            return segmentCount(startR, startC, distR, distC, Cell.BLACK);
+        }
+        return segmentCount(startR, startC, distR, distC, Cell.WHITE);
+    }
+
+    public int segmentCountOppositeColor(int startR, int startC, int distR, int distC, Cell color){
+        if (color == Cell.BLACK){
+            return segmentCount(startR, startC, distR, distC, Cell.WHITE);
+        }
+        return segmentCount(startR, startC, distR, distC, Cell.BLACK);
+    }
+
+    public int segmentCountOppositeColor(int startR, int startC, int distR, int distC, Player.Color color){
+        if (color == Player.Color.BLACK){
+            return segmentCount(startR, startC, distR, distC, Cell.WHITE);
+        }
+        return segmentCount(startR, startC, distR, distC, Cell.BLACK);
+    }
 
     public int segmentCountBlack(int startR, int startC,int lenR, int lenC) {
         return segmentCount(startR, startC, lenR, lenC, Cell.BLACK);
@@ -136,14 +170,13 @@ public class Board {
 
     public int sequenceLength(int startR, int startC, int dr, int dc) {
         if (Math.abs(dr) != 1 || Math.abs(dc) != 1
-                || startR < 0 || startC < 0
-                || startR >= size || startC >= size)
+                || !isCorrectCell(startR, startC))
             return 0;
         int r = startR;
         int c = startC;
         Cell et = getCell(r, c);
         int count = 0;
-        while (r >= 0 && c >= 0 && r < size && c < size && getCell(r, c) == et) {
+        while (getCell(r, c) == et) {
             r += dr;
             c += dc;
             count++;
